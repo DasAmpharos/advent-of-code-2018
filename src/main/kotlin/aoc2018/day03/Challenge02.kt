@@ -6,9 +6,7 @@ import aoc2018.util.readFileAsStream
 import java.io.File
 import kotlin.streams.toList
 
-class Challenge01 : Challenge() {
-
-    private val conflicts = HashSet<String>()
+class Challenge02 : Challenge() {
 
     override fun solve(): String {
         val claims = readFileAsStream(getInputFile())
@@ -16,8 +14,10 @@ class Challenge01 : Challenge() {
             .toList()
         val fabric = buildFabric(claims)
         return claims.stream()
-            .mapToInt { getTotalConflictingArea(it, fabric) }
-            .sum().toString()
+            .filter { !isInConflict(it, fabric) }
+            .findFirst()
+            .orElseThrow { IllegalStateException("unable to find non-conflicting claim") }
+            .claimNumber
     }
 
     override fun getInputFile(): File {
@@ -26,24 +26,21 @@ class Challenge01 : Challenge() {
             .toURI())
     }
 
-    private fun getTotalConflictingArea(claim: Claim, fabric: Array<Array<String>>): Int {
-        var totalConflictingArea = 0
+    private fun isInConflict(claim: Claim, fabric: Array<Array<String>>): Boolean {
         for (col in 0 until claim.area.w) {
             for (row in 0 until claim.area.h) {
                 val x = claim.area.x + col
                 val y = claim.area.y + row
-                val point = "$x,$y"
-                if (isAlreadyClaimed(claim, fabric, x, y) && !conflicts.contains(point)) {
-                    totalConflictingArea++
-                    conflicts.add(point)
+                if (isAlreadyClaimed(claim, fabric, x, y)) {
+                    return true
                 }
             }
         }
-        return totalConflictingArea
+        return false
     }
 }
 
 fun main(args: Array<String>) {
-    val challenge = Challenge01()
+    val challenge = Challenge02()
     println(challenge.solve())
 }
